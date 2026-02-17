@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Interview Panel System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#6366f1;--pk:#4f46e5;--g:#10b981;--w:#f59e0b;--r:#ef4444;--ai:#ec4899;--bg:#0f172a;--c2:#1e293b;--bd:rgba(99,102,241,.2);--tx:#f8fafc;--mu:#94a3b8}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.gbg{position:fixed;inset:0;background-image:linear-gradient(rgba(99,102,241,.04)1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.04)1px,transparent 1px);background-size:50px 50px;pointer-events:none}
+.scr{display:none;position:relative;z-index:1}.scr.on{display:flex}
+#authScr{min-height:100vh;align-items:center;justify-content:center;padding:1rem;flex-direction:column;gap:1rem}
+#appScr{flex-direction:column}
+.abox{background:rgba(15,23,42,.95);border:1px solid var(--bd);border-radius:22px;padding:2.25rem;width:100%;max-width:440px;box-shadow:0 30px 70px rgba(0,0,0,.55)}
+.alogo{width:68px;height:68px;background:linear-gradient(135deg,var(--p),var(--ai));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 1.25rem}
+.atitle{font-size:1.75rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#fff,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.35rem}
+.asub{text-align:center;color:var(--mu);margin-bottom:1.75rem;font-size:.92rem}
+.aerr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:9px;padding:.75rem 1rem;color:#f87171;font-size:.85rem;margin-bottom:.9rem;display:none}
+.aerr.on{display:block}
+.cred-box{background:rgba(99,102,241,.07);border:1px solid var(--bd);border-radius:10px;padding:.9rem 1rem;margin-top:1rem;font-size:.82rem}
+.cred-ttl{color:#818cf8;font-weight:700;margin-bottom:.45rem}
+.cred-row{color:var(--mu);line-height:1.9}.cred-row strong{color:#e2e8f0}
+.qrow{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid var(--bd)}
+.qbtn{padding:.6rem;background:rgba(99,102,241,.08);border:1px solid var(--bd);border-radius:8px;color:#818cf8;font-weight:600;cursor:pointer;font-family:inherit;font-size:.82rem;transition:all .2s}
+.qbtn:hover{background:rgba(99,102,241,.18);color:#fff}
+.alink{text-align:center;margin-top:.9rem;color:var(--mu);font-size:.87rem}
+.alink a{color:var(--p);text-decoration:none;font-weight:600}
+.fg{margin-bottom:1.05rem}
+.fl{display:block;margin-bottom:.4rem;font-weight:600;color:#e2e8f0;font-size:.88rem}
+.req{color:var(--r);margin-left:2px}
+.fi,.fs,.fta{width:100%;padding:.82rem .95rem;background:rgba(30,41,59,.7);border:1.5px solid rgba(99,102,241,.22);border-radius:9px;color:#fff;font-size:.9rem;font-family:inherit;transition:all .22s}
+.fi:focus,.fs:focus,.fta:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(99,102,241,.14)}
+.fi.ok{border-color:var(--g)}.fi.bad{border-color:var(--r)}
+.fhint{font-size:.77rem;color:var(--mu);margin-top:.28rem}
+.fta{resize:vertical;min-height:85px}.fs option{background:#1e293b}
+.pw{position:relative}.pw .fi{padding-right:2.75rem}
+.eye{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mu);cursor:pointer;font-size:.92rem;padding:.2rem}
+.btn{display:block;width:100%;padding:.82rem 1.15rem;border:none;border-radius:9px;font-weight:700;font-family:inherit;font-size:.9rem;cursor:pointer;transition:all .22s;text-align:center}
+.btn:hover{transform:translateY(-1px)}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--pk));color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.28)}
+.btn-s{background:linear-gradient(135deg,var(--g),#059669);color:#fff}
+.btn-d{background:rgba(239,68,68,.1);color:var(--r);border:1px solid rgba(239,68,68,.28)}
+.btn-ai{background:linear-gradient(135deg,var(--ai),#f43f5e);color:#fff}
+.btn-sm{width:auto;padding:.48rem .95rem;font-size:.8rem;display:inline-block}
+.br{display:flex;gap:.6rem;margin-top:1rem}.br .btn{flex:1}
+.bg{display:flex;gap:.4rem;flex-wrap:wrap}
+.wrap{max-width:1600px;margin:0 auto;padding:1.2rem;width:100%}
+.hdr{background:rgba(15,23,42,.7);border:1px solid var(--bd);border-radius:18px;padding:1.2rem 1.6rem;margin-bottom:1.2rem}
+.htop{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.7rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.75rem}
+.lico{width:40px;height:40px;background:linear-gradient(135deg,var(--p),var(--ai));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.lname{font-size:1.2rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lsub{font-size:.73rem;color:var(--mu)}
+.ubar{display:flex;align-items:center;gap:.7rem}
+.uav{width:38px;height:38px;background:linear-gradient(135deg,var(--p),var(--ai));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0}
+.tabs{display:flex;gap:.3rem;background:rgba(30,41,59,.5);padding:.3rem;border-radius:11px;flex-wrap:wrap}
+.tab{padding:.55rem 1rem;border-radius:8px;background:transparent;border:none;color:var(--mu);font-weight:600;cursor:pointer;font-family:inherit;font-size:.82rem;transition:all .22s;white-space:nowrap}
+.tab.on{background:linear-gradient(135deg,var(--p),var(--pk));color:#fff}
+.card{background:rgba(15,23,42,.6);border:1px solid var(--bd);border-radius:17px;padding:1.5rem;margin-bottom:1.2rem}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;padding-bottom:.85rem;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:.55rem}
+.ctitle{font-size:1.2rem;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1.2rem}
+.sc{background:rgba(15,23,42,.6);border:1px solid var(--bd);border-radius:15px;padding:1.25rem;transition:all .28s}
+.sc:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(99,102,241,.18)}
+.sico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:.7rem}
+.slbl{color:var(--mu);font-size:.77rem;margin-bottom:.2rem}
+.sval{font-size:1.9rem;font-weight:800}
+/* SEARCH BAR */
+.sbar{display:flex;align-items:center;gap:.6rem;background:rgba(30,41,59,.7);border:1.5px solid rgba(99,102,241,.22);border-radius:10px;padding:.55rem .85rem;margin-bottom:1rem}
+.sbar input{background:none;border:none;outline:none;color:#fff;font-size:.9rem;font-family:inherit;flex:1;min-width:0}
+.sbar input::placeholder{color:var(--mu)}
+.sbar .sico2{font-size:1.1rem;color:var(--mu);flex-shrink:0}
+.sbar .clr{background:none;border:none;color:var(--mu);cursor:pointer;font-size:.85rem;padding:.15rem .4rem;border-radius:5px;flex-shrink:0}
+.sbar .clr:hover{color:#fff}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:.75rem .85rem;font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--bd)}
+td{padding:.95rem .85rem;border-bottom:1px solid rgba(99,102,241,.07)}
+tr:hover td{background:rgba(99,102,241,.04)}
+.badge{display:inline-block;padding:.28rem .72rem;border-radius:7px;font-size:.72rem;font-weight:700}
+.bok{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.27)}
+.binfo{background:rgba(99,102,241,.12);color:#818cf8;border:1px solid rgba(99,102,241,.27)}
+.bwarn{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.27)}
+.bbad{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.27)}
+.bai{background:linear-gradient(135deg,var(--ai),#f43f5e);color:#fff;font-size:.67rem;padding:.18rem .5rem;border-radius:16px}
+.ab{padding:.38rem .75rem;border-radius:7px;border:1px solid var(--bd);background:rgba(99,102,241,.06);color:#818cf8;font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap}
+.ab:hover{background:rgba(99,102,241,.16)}
+.abr{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.22);color:#f87171}.abr:hover{background:rgba(239,68,68,.16)}
+.abg{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.22);color:#34d399}.abg:hover{background:rgba(16,185,129,.16)}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal.on{display:flex}
+.mbox{background:#0f172a;border:1px solid rgba(99,102,241,.3);border-radius:19px;padding:1.65rem;max-width:620px;width:100%;max-height:92vh;overflow-y:auto}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;padding-bottom:.85rem;border-bottom:1px solid var(--bd)}
+.mtitle{font-size:1.15rem;font-weight:700}
+.xbtn{width:32px;height:32px;border-radius:7px;background:rgba(239,68,68,.1);border:none;color:#f87171;font-size:1.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pb{height:6px;background:rgba(99,102,241,.12);border-radius:6px;overflow:hidden;margin-top:.38rem}
+.pf{height:100%;background:linear-gradient(90deg,var(--p),var(--ai));border-radius:6px;transition:width .35s}
+.sbtn{width:40px;height:40px;border-radius:8px;border:2px solid var(--bd);background:rgba(30,41,59,.6);color:var(--mu);font-weight:700;cursor:pointer;font-family:inherit;font-size:.88rem;transition:all .18s}
+.sbtn.on{background:linear-gradient(135deg,var(--p),var(--pk));border-color:var(--p);color:#fff}
+.qc{background:rgba(30,41,59,.4);border-radius:10px;padding:.95rem 1.1rem;margin-bottom:.7rem;border:1px solid var(--bd)}
+.uz{border:2px dashed rgba(99,102,241,.33);border-radius:12px;padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:all .25s;margin:.9rem 0}
+.uz:hover,.uz.over{border-color:var(--p);background:rgba(99,102,241,.05)}
+.pstats{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.85rem}
+.ps{background:rgba(99,102,241,.07);border-radius:8px;padding:.7rem;text-align:center}
+.psv{font-size:1.25rem;font-weight:700}.psl{font-size:.72rem;color:var(--mu);margin-top:.18rem}
+.tr2{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:.6rem 0}
+.tbtn{padding:.6rem;background:rgba(99,102,241,.08);border:1px solid var(--bd);border-radius:7px;color:#818cf8;font-weight:600;cursor:pointer;font-family:inherit;font-size:.8rem;text-align:center;transition:all .18s}
+.tbtn:hover{background:rgba(99,102,241,.18)}
+.aibox{background:rgba(236,72,153,.05);border:2px solid rgba(236,72,153,.2);border-radius:12px;padding:1.25rem;margin:.9rem 0}
+.aittl{font-weight:700;color:var(--ai);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;font-size:.95rem}
+.ibox{background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.17);border-radius:9px;padding:.85rem .95rem;margin:.6rem 0}
+.crow{background:rgba(30,41,59,.4);border:1px solid var(--bd);border-radius:12px;padding:1rem 1.25rem;margin-bottom:.7rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .25s;flex-wrap:wrap;gap:.6rem}
+.crow:hover{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.35);transform:translateX(3px)}
+.empty{text-align:center;color:var(--mu);padding:2.5rem;line-height:1.9}
+.chips{display:flex;gap:.38rem;flex-wrap:wrap;margin-bottom:1rem}
+.chip{padding:.35rem .8rem;border-radius:16px;border:2px solid var(--bd);background:rgba(30,41,59,.5);color:var(--mu);font-weight:600;cursor:pointer;font-size:.76rem;font-family:inherit;transition:all .18s;white-space:nowrap}
+.chip.on{border-color:var(--p);background:rgba(99,102,241,.2);color:#fff}
+.pncard{background:rgba(30,41,59,.48);border:1px solid var(--bd);border-radius:14px;padding:1.3rem;margin-bottom:.85rem}
+.av{width:36px;height:36px;background:linear-gradient(135deg,var(--p),var(--ai));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
+/* PANEL CANDIDATE PILL */
+.cand-pill{display:inline-flex;align-items:center;gap:.35rem;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);padding:.2rem .6rem;border-radius:16px;font-size:.72rem;color:#34d399;margin:.15rem}
+.cand-pill .rm{background:none;border:none;color:#f87171;cursor:pointer;font-size:.8rem;padding:0 .1rem;line-height:1}
+/* CANDIDATE ALLOC LIST */
+.cal-item{display:flex;align-items:center;justify-content:space-between;padding:.65rem .85rem;border-radius:9px;border:1.5px solid var(--bd);background:rgba(30,41,59,.4);margin-bottom:.38rem;transition:all .18s;gap:.5rem;flex-wrap:wrap}
+.cal-item.sel{border-color:var(--g);background:rgba(16,185,129,.07)}
+.cal-item:hover{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.3)}
+.hi{background:rgba(245,158,11,.25);border-radius:3px;padding:0 1px}
+@media(max-width:768px){.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="gbg"></div>
+
+<!-- AUTH -->
+<div id="authScr" class="scr on">
+  <div class="abox" id="loginBox">
+    <div class="alogo">🎯</div>
+    <h1 class="atitle">AI Interview System</h1>
+    <p class="asub">Intelligent Candidate Evaluation Platform</p>
+    <div class="aerr" id="lErr"></div>
+    <form onsubmit="doLogin(event)">
+      <div class="fg"><label class="fl">Email Address</label>
+        <input type="email" id="lEmail" class="fi" placeholder="you@company.com" required autocomplete="email">
+      </div>
+      <div class="fg"><label class="fl">Password</label>
+        <div class="pw"><input type="password" id="lPass" class="fi" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="eye" onclick="toggleEye('lPass',this)">👁</button></div>
+      </div>
+      <button type="submit" class="btn btn-p">🔐 Sign In</button>
+    </form>
+    <div class="cred-box">
+      <div class="cred-ttl">🔑 Login Credentials</div>
+      <div class="cred-row">Admin — <strong>admin@system.com</strong> / <strong>admin123</strong></div>
+      <div class="cred-row" style="font-size:.76rem;margin-top:.25rem">Panelists use their assigned email &amp; password.</div>
+    </div>
+    <p class="alink">No account? <a href="#" onclick="showBox('signupBox');return false">Sign Up as Panelist</a></p>
+    <div class="qrow">
+      <button class="qbtn" onclick="quickLogin('admin')">👨‍💼 Admin Demo</button>
+      <button class="qbtn" onclick="quickLogin('panelist')">👤 Panelist Demo</button>
+    </div>
+  </div>
+
+  <div class="abox" id="signupBox" style="display:none">
+    <div class="alogo">📝</div>
+    <h1 class="atitle">Create Account</h1>
+    <p class="asub">Register as a panelist</p>
+    <form onsubmit="doSignup(event)">
+      <div class="fg"><label class="fl">Full Name <span class="req">*</span></label><input type="text" id="suN" class="fi" placeholder="Jane Smith" required minlength="2"></div>
+      <div class="fg"><label class="fl">Email <span class="req">*</span></label><input type="email" id="suE" class="fi" placeholder="jane@company.com" required></div>
+      <div class="fg"><label class="fl">Position / Title <span class="req">*</span></label><input type="text" id="suP" class="fi" placeholder="Senior Engineer" required></div>
+      <div class="fg"><label class="fl">Password <span class="req">*</span></label>
+        <div class="pw"><input type="password" id="suPw" class="fi" placeholder="Min 6 characters" required minlength="6"><button type="button" class="eye" onclick="toggleEye('suPw',this)">👁</button></div>
+      </div>
+      <div class="fg"><label class="fl">Confirm Password <span class="req">*</span></label>
+        <div class="pw"><input type="password" id="suCf" class="fi" placeholder="Repeat password" required><button type="button" class="eye" onclick="toggleEye('suCf',this)">👁</button></div>
+      </div>
+      <button type="submit" class="btn btn-s">✅ Create Account</button>
+    </form>
+    <p class="alink"><a href="#" onclick="showBox('loginBox');return false">← Back to Sign In</a></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScr" class="scr">
+  <div class="wrap">
+    <div class="hdr">
+      <div class="htop">
+        <div class="logo">
+          <div class="lico">🎯</div>
+          <div><div class="lname">AI Interview System</div><div class="lsub" id="roleLabel">Dashboard</div></div>
+        </div>
+        <div class="ubar">
+          <div><div style="font-weight:600;font-size:.88rem" id="uName">User</div><div style="font-size:.74rem;color:var(--mu)" id="uRole">—</div></div>
+          <div class="uav" id="uAv">U</div>
+          <button class="btn btn-d btn-sm" onclick="doLogout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="tabs" id="navTabs"></div>
+    </div>
+    <div id="pg"></div>
+  </div>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="mbox" id="mBody"></div>
+</div>
+
+<script>
+/* ─── DATA ─── */
+function initDB(){
+  if(!localStorage.getItem('ais')){
+    save({
+      users:{'admin@system.com':{email:'admin@system.com',password:'admin123',name:'Admin User',role:'admin'}},
+      candidates:[],panelists:[],panels:[],
+      sections:[
+        {id:1,name:'Technical Skills',questions:[{id:1,text:'Demonstrates strong understanding of core technical concepts'},{id:2,text:'Shows practical experience with relevant technologies'}]},
+        {id:2,name:'Communication',questions:[{id:3,text:'Clarity and coherence in verbal communication'},{id:4,text:'Active listening and responsiveness'}]},
+        {id:3,name:'Problem Solving',questions:[{id:5,text:'Analytical thinking and logical reasoning'},{id:6,text:'Creative approaches to challenges'}]},
+        {id:4,name:'Cultural Fit',questions:[{id:7,text:'Alignment with company values and culture'},{id:8,text:'Team collaboration mindset'}]}
+      ],
+      evaluations:[],nc:1,np:1,ns:5,nq:9,ne:1,npg:1
+    });
+  } else {
+    const d=db();let chg=false;
+    if(!d.panels){d.panels=[];chg=true;}
+    if(!d.npg){d.npg=1;chg=true;}
+    // migrate panels to include candidateIds
+    (d.panels||[]).forEach(pn=>{if(!pn.candidateIds){pn.candidateIds=[];chg=true;}});
+    if(chg)save(d);
+  }
+}
+function db(){return JSON.parse(localStorage.getItem('ais'));}
+function save(d){localStorage.setItem('ais',JSON.stringify(d));}
+initDB();
+
+/* ─── UTILS ─── */
+function toggleEye(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈';}
+function openModal(h){document.getElementById('mBody').innerHTML=h;document.getElementById('modal').classList.add('on');}
+function closeModal(){document.getElementById('modal').classList.remove('on');}
+function showBox(id){document.querySelectorAll('.abox').forEach(b=>b.style.display='none');document.getElementById(id).style.display='';}
+function av(n){return n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);}
+function recBadge(r){return r==='Highly Recommended'?'bok':r==='Recommended'?'binfo':r==='Consider'?'bwarn':'bbad';}
+function recCol(r){return r==='Highly Recommended'?'#10b981':r==='Recommended'?'#818cf8':r==='Consider'?'#f59e0b':'#ef4444';}
+function recBg(r){return r==='Highly Recommended'?'rgba(16,185,129,.1)':r==='Recommended'?'rgba(99,102,241,.1)':r==='Consider'?'rgba(245,158,11,.1)':'rgba(239,68,68,.1)';}
+function chips(arr,cur,fn){return arr.map(c=>`<button class="chip${cur===c.k?' on':''}" onclick="${fn}('${c.k}')">${c.l}</button>`).join('');}
+function hl(text,q){if(!q)return text;const r=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');return String(text).replace(r,'<span class="hi">$1</span>');}
+
+/* ─── AUTH ─── */
+let CU=null;
+function doLogin(e){
+  e.preventDefault();
+  const email=document.getElementById('lEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('lPass').value;
+  const d=db();const u=d.users[email];
+  const err=document.getElementById('lErr');err.className='aerr';
+  if(u&&u.password===pass){CU=u;launchApp();}
+  else{err.textContent=d.users[email]?'❌ Incorrect password.':'❌ No account found for that email.';err.className='aerr on';}
+}
+function quickLogin(role){
+  const d=db();
+  if(role==='admin'){CU=d.users['admin@system.com'];launchApp();return;}
+  const p=d.panelists[0];
+  if(p&&d.users[p.email]){CU=d.users[p.email];launchApp();}
+  else alert('No panelist accounts yet.\nSign up or ask admin to add a panelist.');
+}
+function doSignup(e){
+  e.preventDefault();
+  const name=document.getElementById('suN').value.trim();
+  const email=document.getElementById('suE').value.trim().toLowerCase();
+  const pos=document.getElementById('suP').value.trim();
+  const pass=document.getElementById('suPw').value;
+  const conf=document.getElementById('suCf').value;
+  if(pass!==conf){alert('❌ Passwords do not match!');return;}
+  const d=db();
+  if(d.users[email]){alert('❌ Email already registered.');return;}
+  d.panelists.push({id:d.np++,name,email,position:pos});
+  d.users[email]={email,password:pass,name,role:'panelist'};
+  save(d);
+  alert('✅ Account created!\nYou can now sign in.');
+  document.getElementById('lEmail').value=email;
+  showBox('loginBox');
+}
+function doLogout(){
+  CU=null;
+  document.getElementById('lEmail').value='';document.getElementById('lPass').value='';
+  document.getElementById('lErr').className='aerr';
+  document.getElementById('appScr').classList.remove('on');
+  document.getElementById('authScr').classList.add('on');
+  showBox('loginBox');
+}
+function launchApp(){
+  document.getElementById('authScr').classList.remove('on');
+  document.getElementById('appScr').classList.add('on');
+  document.getElementById('uName').textContent=CU.name;
+  document.getElementById('uRole').textContent=CU.email;
+  document.getElementById('uAv').textContent=av(CU.name);
+  document.getElementById('roleLabel').textContent=CU.role==='admin'?'System Administrator':'Panelist Dashboard';
+  buildNav();
+}
+function buildNav(){
+  const tabs=document.getElementById('navTabs');
+  if(CU.role==='admin'){
+    tabs.innerHTML=`
+      <button class="tab on"  onclick="goTo('dashboard',this)">📊 Dashboard</button>
+      <button class="tab" onclick="goTo('candidates',this)">👥 Candidates</button>
+      <button class="tab" onclick="goTo('panelists',this)">👨‍💼 Panelists</button>
+      <button class="tab" onclick="goTo('panels',this)">🗂️ Panels</button>
+      <button class="tab" onclick="goTo('questions',this)">📝 Questions</button>
+      <button class="tab" onclick="goTo('evals',this)">⭐ Evaluations</button>`;
+  } else {
+    tabs.innerHTML=`
+      <button class="tab on" onclick="goTo('myevals',this)">📝 My Evaluations</button>
+      <button class="tab" onclick="goTo('dashboard',this)">📊 Rankings</button>`;
+  }
+  goTo(CU.role==='admin'?'dashboard':'myevals');
+}
+function goTo(page,btn){
+  if(btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');}
+  const el=document.getElementById('pg');
+  ({dashboard:pgDash,candidates:pgCands,panelists:pgPanelists,panels:pgPanels,questions:pgQuestions,evals:pgEvals,myevals:pgMyEvals})[page]?.(el);
+}
+
+/* ─── RANKINGS & AI ─── */
+function calcRankings(){
+  const d=db();const map={};
+  d.evaluations.forEach(e=>{
+    if(!map[e.candidateId])map[e.candidateId]={scores:[],cand:d.candidates.find(c=>c.id===e.candidateId)};
+    if(e.status==='done')map[e.candidateId].scores.push(e.avgScore);
+  });
+  return Object.entries(map).filter(([,v])=>v.cand&&v.scores.length).map(([id,v])=>{
+    const avg=v.scores.reduce((a,b)=>a+b,0)/v.scores.length;
+    const pct=(avg/5)*100;
+    let rec='Not Recommended',ins='Below expectations';
+    if(pct>=80){rec='Highly Recommended';ins='Exceptional candidate';}
+    else if(pct>=65){rec='Recommended';ins='Strong performer';}
+    else if(pct>=50){rec='Consider';ins='Shows potential';}
+    return{candId:parseInt(id),name:v.cand.name,position:v.cand.position,avg,pct,count:v.scores.length,rec,ins};
+  }).sort((a,b)=>b.avg-a.avg);
+}
+function aiAnalysis(cand,evs){
+  if(!evs||!evs.length)return{avg:0,pct:0,conf:0,cons:0,strengths:[],improvs:[],skills:{},rec:'No Data',summary:'No evaluations yet.',count:0};
+  const d=db();const skills={};
+  d.sections.forEach(sec=>{
+    let tot=0,cnt=0;
+    evs.forEach(ev=>{sec.questions.forEach(q=>{if(ev.scores&&ev.scores[q.id]!==undefined){tot+=ev.scores[q.id];cnt++;}});});
+    skills[sec.name]=cnt>0?tot/cnt:0;
+  });
+  const avg=evs.reduce((s,e)=>s+e.avgScore,0)/evs.length;
+  const pct=(avg/5)*100;
+  const strengths=Object.entries(skills).filter(([,s])=>s>=4).map(([n,s])=>({area:n,desc:'Excellent — '+s.toFixed(1)+'/5'}));
+  const improvs=Object.entries(skills).filter(([,s])=>s<2.5).map(([n,s])=>({area:n,desc:'Needs development — '+s.toFixed(1)+'/5'}));
+  const name=cand?cand.name:'Candidate';
+  let rec,summary,conf;
+  if(pct>=80){rec='Highly Recommended';conf=95;summary=name+' demonstrates exceptional capability. '+evs.length+' evaluation(s) at '+pct.toFixed(0)+'% strongly supports hiring.';}
+  else if(pct>=65){rec='Recommended';conf=85;summary=name+' shows solid competency. '+(strengths.length?'Strengths in '+strengths.map(s=>s.area).join(', ')+'. ':'')+'Score: '+pct.toFixed(0)+'%.';}
+  else if(pct>=50){rec='Consider with Reservations';conf=70;summary=name+' shows potential but gaps remain. '+(improvs.length?'Development needed in '+improvs.map(i=>i.area).join(', ')+'. ':'')+'Score: '+pct.toFixed(0)+'%.';}
+  else{rec='Not Recommended';conf=90;summary=name+' falls below standards at '+pct.toFixed(0)+'%.';}
+  const sc=evs.map(e=>e.avgScore),mean=sc.reduce((a,b)=>a+b,0)/sc.length;
+  const cons=Math.max(0,100-Math.sqrt(sc.reduce((s,x)=>s+Math.pow(x-mean,2),0)/sc.length)*40);
+  return{avg,pct,conf,cons,strengths,improvs,skills,rec,summary,count:evs.length};
+}
+
+/* ─── DASHBOARD ─── */
+let dvw='rankings',dchip='all';
+function pgDash(el){
+  const d=db();const r=calcRankings();
+  const evIds=new Set(r.map(x=>x.candId));
+  const pending=d.candidates.filter(c=>!evIds.has(c.id));
+  let filtered=r;
+  if(dchip==='rec')filtered=r.filter(x=>x.rec==='Highly Recommended'||x.rec==='Recommended');
+  else if(dchip==='con')filtered=r.filter(x=>x.rec==='Consider');
+  else if(dchip==='no')filtered=r.filter(x=>x.rec==='Not Recommended');
+  else if(dchip==='pend')filtered=[];
+  const chipBar=chips([{k:'all',l:'All ('+r.length+')'},{k:'rec',l:'✅ Recommended ('+r.filter(x=>x.rec==='Highly Recommended'||x.rec==='Recommended').length+')'},{k:'con',l:'🤔 Consider ('+r.filter(x=>x.rec==='Consider').length+')'},{k:'no',l:'❌ Not Recommended ('+r.filter(x=>x.rec==='Not Recommended').length+')'},{k:'pend',l:'⏳ Not Evaluated ('+pending.length+')'}],dchip,'setDChip');
+  const tRows=(dchip==='pend'?pending.map(c=>`<tr><td style="color:var(--mu)">—</td><td><strong>${c.name}</strong></td><td style="color:var(--mu)">${c.position}</td><td style="color:var(--mu)">—</td><td style="text-align:center">0</td><td style="color:var(--w);font-size:.8rem">Awaiting</td><td><span class="badge bwarn">⏳ Pending</span></td><td>—</td></tr>`)
+    :filtered.map((x,i)=>`<tr><td><strong style="color:${i===0?'#fbbf24':i===1?'#94a3b8':i===2?'#f97316':'#fff'}">#${i+1}</strong></td><td><strong style="color:#fff">${x.name}</strong></td><td style="color:var(--mu)">${x.position}</td><td><strong>${x.avg.toFixed(1)}/5</strong><div class="pb"><div class="pf" style="width:${x.pct}%"></div></div></td><td style="text-align:center;font-weight:700">${x.count}</td><td style="color:var(--ai);font-size:.79rem">${x.ins}</td><td><span class="badge ${recBadge(x.rec)}">${x.rec}</span></td><td style="white-space:nowrap"><button class="ab abg" onclick="showAI(${x.candId})" style="margin-right:.3rem">🤖 AI</button></td></tr>`)).join('');
+  const expBar=r.length?`<div class="bg"><button class="btn btn-ai btn-sm" onclick="dvw='report';pgDash(document.getElementById('pg'))">📑 Report</button><button class="btn btn-s btn-sm" onclick="expCSV()">📊 CSV</button><button class="btn btn-p btn-sm" onclick="expXLS()">📈 Excel</button></div>`:'';
+  el.innerHTML=`
+    <div class="stats">
+      <div class="sc"><div class="sico" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">👥</div><div class="slbl">Candidates</div><div class="sval">${d.candidates.length}</div></div>
+      <div class="sc"><div class="sico" style="background:linear-gradient(135deg,#10b981,#14b8a6)">👨‍💼</div><div class="slbl">Panelists</div><div class="sval">${d.panelists.length}</div></div>
+      <div class="sc"><div class="sico" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">🗂️</div><div class="slbl">Panels</div><div class="sval">${d.panels.length}</div></div>
+      <div class="sc"><div class="sico" style="background:linear-gradient(135deg,#ec4899,#f43f5e)">📝</div><div class="slbl">Evaluations</div><div class="sval">${d.evaluations.length}</div></div>
+    </div>
+    <div class="card" ${dvw==='report'?'style="display:none"':''}>
+      <div class="ch"><h2 class="ctitle">🏆 Rankings <span class="bai">🤖 AI</span></h2>${expBar}</div>
+      <div class="chips">${chipBar}</div>
+      ${tRows?`<div class="tw"><table><thead><tr><th>Rank</th><th>Name</th><th>Position</th><th>Score</th><th>Evals</th><th>Insight</th><th>Status</th><th>Actions</th></tr></thead><tbody>${tRows}</tbody></table></div>`:'<div class="empty">📭 No candidates match this filter.</div>'}
+    </div>
+    ${dvw==='report'?`<div class="card"><div class="ch"><h2 class="ctitle">📑 Report <span class="bai">🤖 AI</span></h2><div class="bg"><button class="btn btn-d btn-sm" onclick="dvw='rankings';pgDash(document.getElementById('pg'))">✕ Close</button><button class="btn btn-s btn-sm" onclick="expCSV()">📊 CSV</button><button class="btn btn-p btn-sm" onclick="expXLS()">📈 Excel</button></div></div>${buildReport(r,d)}</div>`:''}`;
+}
+function setDChip(k){dchip=k;pgDash(document.getElementById('pg'));}
+
+function buildReport(r,d){
+  if(!r.length)return'<div class="empty">No evaluations yet.</div>';
+  const avg=(r.reduce((s,x)=>s+x.avg,0)/r.length).toFixed(1);
+  let html=`<div class="stats" style="margin-bottom:1.5rem"><div class="sc"><div class="slbl">Candidates</div><div class="sval" style="color:var(--p)">${r.length}</div></div><div class="sc"><div class="slbl">Evaluations</div><div class="sval" style="color:var(--g)">${d.evaluations.length}</div></div><div class="sc"><div class="slbl">Avg Score</div><div class="sval" style="color:var(--w)">${avg}/5</div></div></div>`;
+  r.forEach((x,idx)=>{
+    const cand=d.candidates.find(c=>c.id===x.candId);if(!cand)return;
+    const evs=d.evaluations.filter(e=>e.candidateId===x.candId&&e.status==='done');
+    const an=aiAnalysis(cand,evs);const col=recCol(x.rec);
+    const skillBars=Object.entries(an.skills).map(([sk,sc])=>`<div style="margin-bottom:.5rem"><div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.22rem"><span>${sk}</span><span style="color:var(--mu)">${sc.toFixed(1)}/5</span></div><div class="pb"><div class="pf" style="width:${(sc/5)*100}%"></div></div></div>`).join('');
+    html+=`<div style="background:rgba(15,23,42,.7);border:2px solid var(--bd);border-radius:15px;padding:1.3rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.85rem;flex-wrap:wrap;gap:.6rem">
+        <div><div style="display:flex;align-items:center;gap:.5rem"><span style="background:linear-gradient(135deg,var(--p),var(--ai));color:#fff;padding:.2rem .65rem;border-radius:16px;font-weight:700;font-size:.78rem">#${idx+1}</span><span style="font-size:1.15rem;font-weight:800">${x.name}</span></div><div style="color:var(--mu);font-size:.8rem;margin-top:.2rem">${cand.position} · ${cand.email}</div></div>
+        <div style="text-align:right"><div style="font-size:1.9rem;font-weight:800;color:${col}">${x.avg.toFixed(1)}<span style="font-size:.85rem;color:var(--mu)">/5</span></div><span style="background:${recBg(x.rec)};color:${col};padding:.28rem .8rem;border-radius:16px;font-weight:700;font-size:.74rem;border:1.5px solid ${col}">${x.rec}</span></div>
+      </div>
+      <div class="aibox" style="margin:.6rem 0"><div class="aittl">🤖 AI Summary</div><p style="color:#e2e8f0;font-size:.85rem;line-height:1.7">${an.summary}</p></div>
+      <div>${skillBars}</div>
+      <button class="ab abg" onclick="showAI(${x.candId})" style="margin-top:.65rem">🤖 Full AI Analysis</button>
+    </div>`;
+  });
+  return html;
+}
+
+/* ─── CANDIDATES ─── */
+let cf='all', cq='';
+function pgCands(el){
+  const d=db();
+  const eIds=new Set(d.evaluations.map(e=>e.candidateId));
+  let list=d.candidates;
+  if(cf==='ev')list=d.candidates.filter(c=>eIds.has(c.id));
+  if(cf==='no')list=d.candidates.filter(c=>!eIds.has(c.id));
+  // search filter
+  const q=cq.toLowerCase().trim();
+  if(q)list=list.filter(c=>c.name.toLowerCase().includes(q)||c.email.toLowerCase().includes(q)||c.phone.includes(q)||c.position.toLowerCase().includes(q)||c.candidateId.includes(q));
+  const rows=list.map(c=>{
+    const evs=d.evaluations.filter(e=>e.candidateId===c.id&&e.status==='done');
+    const avg=evs.length?(evs.reduce((s,e)=>s+e.avgScore,0)/evs.length).toFixed(1):'—';
+    // which panels
+    const inPanels=(d.panels||[]).filter(pn=>(pn.candidateIds||[]).includes(c.id)).map(pn=>pn.name);
+    return`<tr>
+      <td style="font-family:monospace;color:#818cf8;font-size:.85rem">${hl(c.candidateId,q)}</td>
+      <td><strong style="color:#fff">${hl(c.name,q)}</strong></td>
+      <td style="color:var(--mu)">${hl(c.position,q)}</td>
+      <td style="color:var(--mu)">${hl(c.phone,q)}</td>
+      <td style="color:var(--mu)">${hl(c.email,q)}</td>
+      <td>${inPanels.length?inPanels.map(n=>`<span style="background:rgba(99,102,241,.12);color:#818cf8;padding:.15rem .45rem;border-radius:7px;font-size:.72rem;margin-right:.2rem">${n}</span>`).join(''):'<span style="color:var(--mu);font-size:.78rem;font-style:italic">None</span>'}</td>
+      <td style="text-align:center"><span class="badge ${evs.length?'bok':'bwarn'}">${evs.length?evs.length+' eval':'⏳ None'}</span></td>
+      <td style="text-align:center;font-weight:700;color:${evs.length?'#fff':'var(--mu)'}">${avg}${avg!=='—'?'/5':''}</td>
+      <td><button class="ab abr" onclick="delCand(${c.id})">🗑️</button></td>
+    </tr>`;
+  }).join('');
+  el.innerHTML=`<div class="card">
+    <div class="ch"><h2 class="ctitle">👥 Candidates</h2>
+      <div class="bg"><button class="btn btn-p btn-sm" onclick="mUpCands()">📤 Upload</button><button class="btn btn-s btn-sm" onclick="mAddCand()">➕ Add</button></div>
+    </div>
+    <div class="sbar"><span class="sico2">🔍</span><input type="text" placeholder="Search by name, email, phone, ID, or position…" value="${cq}" oninput="cq=this.value;pgCands(document.getElementById('pg'))">${cq?`<button class="clr" onclick="cq='';pgCands(document.getElementById('pg'))">✕</button>`:''}</div>
+    <div class="chips">${chips([{k:'all',l:'All ('+d.candidates.length+')'},{k:'ev',l:'✅ Evaluated ('+d.candidates.filter(c=>eIds.has(c.id)).length+')'},{k:'no',l:'⏳ Not Yet ('+d.candidates.filter(c=>!eIds.has(c.id)).length+')'}],cf,'setCF')}</div>
+    ${list.length?`<div class="tw"><table><thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Phone</th><th>Email</th><th>Panel(s)</th><th>Evals</th><th>Avg Score</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+    :`<div class="empty">${q?'🔍 No candidates match "'+cq+'"':'📭 No candidates yet.'}</div>`}
+  </div>`;
+}
+function setCF(k){cf=k;pgCands(document.getElementById('pg'));}
+
+function mAddCand(){
+  openModal(`<div class="mhdr"><span class="mtitle">➕ Add Candidate</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="fg"><label class="fl">Phone <span class="req">*</span></label><input type="tel" id="cPh" class="fi" placeholder="0712345678" maxlength="10">
+      <div class="fhint">10 digits starting with 07 — used as unique ID</div></div>
+    <div class="fg"><label class="fl">Full Name <span class="req">*</span></label><input type="text" id="cNm" class="fi" placeholder="John Doe"></div>
+    <div class="fg"><label class="fl">Position Applied <span class="req">*</span></label><input type="text" id="cPs" class="fi" placeholder="Software Engineer"></div>
+    <div class="fg"><label class="fl">Email <span class="req">*</span></label><input type="email" id="cEm" class="fi" placeholder="john@example.com"></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="saveCand()">✅ Add</button></div>
+    <script>document.getElementById('cPh').addEventListener('input',function(){this.value=this.value.replace(/\\D/g,'').slice(0,10);const ok=/^07[0-9]{8}$/.test(this.value);this.className='fi'+(this.value.length===10?(ok?' ok':' bad'):'');});setTimeout(()=>document.getElementById('cPh').focus(),80);<\/script>`);
+}
+function saveCand(){
+  const ph=document.getElementById('cPh').value.trim(),nm=document.getElementById('cNm').value.trim(),ps=document.getElementById('cPs').value.trim(),em=document.getElementById('cEm').value.trim();
+  if(!/^07[0-9]{8}$/.test(ph)){alert('❌ Phone must be 10 digits starting with 07.');return;}
+  if(nm.length<2){alert('❌ Please enter a full name.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){alert('❌ Please enter a valid email.');return;}
+  if(!ps){alert('❌ Please enter the position.');return;}
+  const d=db();
+  if(d.candidates.some(c=>c.candidateId===ph)){alert('❌ Candidate with phone '+ph+' already exists.');return;}
+  if(d.candidates.some(c=>c.email.toLowerCase()===em.toLowerCase())){alert('❌ That email is already registered.');return;}
+  d.candidates.push({id:d.nc++,candidateId:ph,name:nm,position:ps,email:em,phone:ph});
+  save(d);closeModal();pgCands(document.getElementById('pg'));
+}
+function delCand(id){
+  const d=db();const c=d.candidates.find(x=>x.id===id);if(!c)return;
+  if(!confirm('🗑️ Delete "'+c.name+'"? This is permanent.'))return;
+  d.candidates=d.candidates.filter(x=>x.id!==id);
+  (d.panels||[]).forEach(pn=>{pn.candidateIds=(pn.candidateIds||[]).filter(cid=>cid!==id);});
+  save(d);pgCands(document.getElementById('pg'));
+}
+function mUpCands(){
+  openModal(`<div class="mhdr"><span class="mtitle">📤 Upload Candidates</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="ibox"><strong>Format:</strong><div class="fhint" style="margin-top:.3rem">Columns: phone, name, position, email</div></div>
+    <div class="tr2"><button class="tbtn" onclick="dlTmpl('cands','csv')">📄 CSV Template</button><button class="tbtn" onclick="dlTmpl('cands','xlsx')">📊 Excel Template</button></div>
+    <div class="uz" id="cuz" onclick="document.getElementById('cuf').click()"><div style="font-size:1.8rem;margin-bottom:.4rem">📁</div><div style="font-weight:600;font-size:.9rem">Click or drag & drop</div><div class="fhint">.csv .xlsx .xls</div></div>
+    <input type="file" id="cuf" style="display:none" accept=".csv,.xlsx,.xls" onchange="parseCF(event)"><div id="cup"></div>
+    <script>const uz=document.getElementById('cuz');uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('over')});uz.addEventListener('dragleave',()=>uz.classList.remove('over'));uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('over');const f=e.dataTransfer.files[0];if(f)parseCF({target:{files:[f]}})});<\/script>`);
+}
+function parseCF(ev){const f=ev.target.files[0];if(!f)return;f.name.endsWith('.csv')?Papa.parse(f,{header:true,complete:r=>prevCands(r.data)}):(r=>{r.onload=e=>{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});prevCands(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]))};r.readAsArrayBuffer(f)})(new FileReader());}
+function prevCands(rows){const v=rows.filter(r=>r.phone&&r.name&&r.position&&r.email&&/^07[0-9]{8}$/.test(String(r.phone).trim()));document.getElementById('cup').innerHTML=`<div class="pstats"><div class="ps"><div class="psv">${rows.length}</div><div class="psl">Total</div></div><div class="ps"><div class="psv" style="color:var(--g)">${v.length}</div><div class="psl">Valid</div></div><div class="ps"><div class="psv" style="color:var(--r)">${rows.length-v.length}</div><div class="psl">Invalid</div></div></div>${v.length?`<button class="btn btn-s" style="margin-top:.8rem" onclick='importCands(${JSON.stringify(v)})'>✅ Import ${v.length}</button>`:''}`;}
+function importCands(rows){const d=db();let a=0,s=0;rows.forEach(r=>{const p=String(r.phone).trim();if(d.candidates.some(c=>c.candidateId===p||c.email.toLowerCase()===r.email.toLowerCase())){s++;return;}d.candidates.push({id:d.nc++,candidateId:p,name:r.name,position:r.position,email:r.email,phone:p});a++;});save(d);closeModal();pgCands(document.getElementById('pg'));alert('✅ Imported '+a+'. Skipped '+s+' duplicates.');}
+
+/* ─── PANELISTS ─── */
+let pq='';
+function pgPanelists(el){
+  const d=db();
+  const q=pq.toLowerCase().trim();
+  let list=d.panelists;
+  if(q)list=list.filter(p=>p.name.toLowerCase().includes(q)||p.email.toLowerCase().includes(q)||(p.phone||'').includes(q)||p.position.toLowerCase().includes(q));
+  const rows=list.map(p=>{
+    const inP=(d.panels||[]).filter(pn=>(pn.memberIds||[]).includes(p.id)).map(pn=>pn.name);
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:.65rem"><div class="av">${av(p.name)}</div><div><div style="font-weight:700;color:#fff">${hl(p.name,q)}</div><div style="font-size:.76rem;color:var(--mu)">${p.position}</div></div></div></td>
+      <td style="color:var(--mu);font-size:.87rem">${hl(p.email,q)}</td>
+      <td style="color:var(--mu);font-size:.87rem">${hl(p.phone||'—',q)}</td>
+      <td>${inP.length?inP.map(n=>`<span style="background:rgba(99,102,241,.12);color:#818cf8;padding:.18rem .5rem;border-radius:8px;font-size:.74rem;margin-right:.28rem">${n}</span>`).join(''):'<span style="color:var(--mu);font-size:.8rem;font-style:italic">Unassigned</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="ab" onclick="mEditP(${p.id})" style="margin-right:.3rem">✏️ Edit</button>
+        <button class="ab abr" onclick="delPanelist(${p.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  el.innerHTML=`<div class="card">
+    <div class="ch"><h2 class="ctitle">👨‍💼 Panelists</h2>
+      <div class="bg"><button class="btn btn-p btn-sm" onclick="mUpPanelists()">📤 Upload</button><button class="btn btn-s btn-sm" onclick="mAddPanelist()">➕ Add</button></div>
+    </div>
+    <div class="sbar"><span class="sico2">🔍</span><input type="text" placeholder="Search by name, email, phone, or position…" value="${pq}" oninput="pq=this.value;pgPanelists(document.getElementById('pg'))">${pq?`<button class="clr" onclick="pq='';pgPanelists(document.getElementById('pg'))">✕</button>`:''}</div>
+    ${list.length?`<div class="tw"><table><thead><tr><th>Panelist</th><th>Email (Login)</th><th>Phone</th><th>Panel Membership</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    :`<div class="empty">${q?'🔍 No panelists match "'+pq+'"':'📭 No panelists yet.'}</div>`}
+  </div>`;
+}
+
+function mAddPanelist(){
+  openModal(`<div class="mhdr"><span class="mtitle">➕ Add Panelist</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="ibox"><strong>🔐 Login Account Created</strong><div class="fhint" style="margin-top:.3rem">Share these credentials with the panelist after saving.</div></div>
+    <div class="fg"><label class="fl">Full Name <span class="req">*</span></label><input type="text" id="pn" class="fi" placeholder="Sarah Johnson"></div>
+    <div class="fg"><label class="fl">Email (Login) <span class="req">*</span></label><input type="email" id="pe" class="fi" placeholder="sarah@company.com"></div>
+    <div class="fg"><label class="fl">Phone</label><input type="tel" id="pph" class="fi" placeholder="0712345678 (optional)"></div>
+    <div class="fg"><label class="fl">Position / Title <span class="req">*</span></label><input type="text" id="pp" class="fi" placeholder="Senior Engineer"></div>
+    <div class="fg"><label class="fl">Password <span class="req">*</span></label>
+      <div class="pw"><input type="password" id="pw" class="fi" placeholder="Min 6 characters"><button type="button" class="eye" onclick="toggleEye('pw',this)">👁</button></div></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="savePanelist()">✅ Add</button></div>
+    <script>setTimeout(()=>document.getElementById('pn').focus(),80)<\/script>`);
+}
+function savePanelist(){
+  const n=document.getElementById('pn').value.trim(),e=document.getElementById('pe').value.trim().toLowerCase(),ph=document.getElementById('pph').value.trim(),p=document.getElementById('pp').value.trim(),pw=document.getElementById('pw').value;
+  if(n.length<2){alert('❌ Please enter a valid name.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){alert('❌ Please enter a valid email.');return;}
+  if(!p){alert('❌ Please enter a position.');return;}
+  if(pw.length<6){alert('❌ Password must be at least 6 characters.');return;}
+  const d=db();
+  if(d.users[e]){alert('❌ That email is already registered.');return;}
+  d.panelists.push({id:d.np++,name:n,email:e,phone:ph,position:p});
+  d.users[e]={email:e,password:pw,name:n,role:'panelist'};
+  save(d);closeModal();pgPanelists(document.getElementById('pg'));
+  alert('✅ Panelist added!\nEmail: '+e+'\nPassword: '+pw);
+}
+function mEditP(id){
+  const d=db();const p=d.panelists.find(x=>x.id===id);if(!p)return;
+  openModal(`<div class="mhdr"><span class="mtitle">✏️ Edit Panelist</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="fg"><label class="fl">Full Name <span class="req">*</span></label><input type="text" id="epn" class="fi" value="${p.name}"></div>
+    <div class="fg"><label class="fl">Email <span class="req">*</span></label><input type="email" id="epe" class="fi" value="${p.email}"></div>
+    <div class="fg"><label class="fl">Phone</label><input type="tel" id="epph" class="fi" value="${p.phone||''}"></div>
+    <div class="fg"><label class="fl">Position <span class="req">*</span></label><input type="text" id="epp" class="fi" value="${p.position}"></div>
+    <div class="fg"><label class="fl">New Password</label>
+      <div class="pw"><input type="password" id="epw" class="fi" placeholder="Leave blank to keep current"><button type="button" class="eye" onclick="toggleEye('epw',this)">👁</button></div></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="updatePanelist(${id})">💾 Save</button></div>`);
+}
+function updatePanelist(id){
+  const n=document.getElementById('epn').value.trim(),e=document.getElementById('epe').value.trim().toLowerCase(),ph=document.getElementById('epph').value.trim(),p=document.getElementById('epp').value.trim(),npw=document.getElementById('epw').value;
+  if(n.length<2||!p){alert('❌ Please fill in all required fields.');return;}
+  if(npw&&npw.length<6){alert('❌ Password must be at least 6 characters.');return;}
+  const d=db();const pan=d.panelists.find(x=>x.id===id);if(!pan)return;
+  const oldE=pan.email;
+  if(oldE!==e&&d.users[e]){alert('❌ That email is already used.');return;}
+  if(oldE!==e){d.users[e]={...d.users[oldE],email:e,name:n};delete d.users[oldE];}
+  else if(d.users[oldE])d.users[oldE].name=n;
+  if(npw&&d.users[e])d.users[e].password=npw;
+  pan.name=n;pan.email=e;pan.phone=ph;pan.position=p;
+  save(d);closeModal();pgPanelists(document.getElementById('pg'));
+  alert('✅ Panelist updated!');
+}
+function delPanelist(id){
+  const d=db();const p=d.panelists.find(x=>x.id===id);if(!p)return;
+  if(!confirm('🗑️ Delete "'+p.name+'"? Removes login. Evaluations remain.'))return;
+  if(d.users[p.email])delete d.users[p.email];
+  d.panelists=d.panelists.filter(x=>x.id!==id);
+  (d.panels||[]).forEach(pn=>{pn.memberIds=(pn.memberIds||[]).filter(mid=>mid!==id);});
+  save(d);pgPanelists(document.getElementById('pg'));
+}
+function mUpPanelists(){
+  openModal(`<div class="mhdr"><span class="mtitle">📤 Upload Panelists</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="ibox"><strong>Format:</strong><div class="fhint" style="margin-top:.3rem">Columns: name, email, position, password</div></div>
+    <div class="tr2"><button class="tbtn" onclick="dlTmpl('panels','csv')">📄 CSV Template</button><button class="tbtn" onclick="dlTmpl('panels','xlsx')">📊 Excel Template</button></div>
+    <div class="uz" id="puz" onclick="document.getElementById('puf').click()"><div style="font-size:1.8rem;margin-bottom:.4rem">📁</div><div style="font-weight:600;font-size:.9rem">Click or drag & drop</div></div>
+    <input type="file" id="puf" style="display:none" accept=".csv,.xlsx,.xls" onchange="parsePF(event)"><div id="pup"></div>
+    <script>const puz=document.getElementById('puz');puz.addEventListener('dragover',e=>{e.preventDefault();puz.classList.add('over')});puz.addEventListener('dragleave',()=>puz.classList.remove('over'));puz.addEventListener('drop',e=>{e.preventDefault();puz.classList.remove('over');const f=e.dataTransfer.files[0];if(f)parsePF({target:{files:[f]}})});<\/script>`);
+}
+function parsePF(ev){const f=ev.target.files[0];if(!f)return;f.name.endsWith('.csv')?Papa.parse(f,{header:true,complete:r=>prevPanelists(r.data)}):(r=>{r.onload=e=>{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});prevPanelists(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]))};r.readAsArrayBuffer(f)})(new FileReader());}
+function prevPanelists(rows){const v=rows.filter(r=>r.name&&r.email&&r.position&&r.password);document.getElementById('pup').innerHTML=`<div class="pstats"><div class="ps"><div class="psv">${rows.length}</div><div class="psl">Total</div></div><div class="ps"><div class="psv" style="color:var(--g)">${v.length}</div><div class="psl">Valid</div></div><div class="ps"><div class="psv" style="color:var(--r)">${rows.length-v.length}</div><div class="psl">Invalid</div></div></div>${v.length?`<button class="btn btn-s" style="margin-top:.8rem" onclick='importPanelists(${JSON.stringify(v)})'>✅ Import ${v.length}</button>`:''}`;}
+function importPanelists(rows){const d=db();let a=0,s=0;rows.forEach(r=>{const em=r.email.toLowerCase().trim();if(d.users[em]){s++;return;}d.panelists.push({id:d.np++,name:r.name,email:em,position:r.position,phone:r.phone||''});d.users[em]={email:em,password:r.password,name:r.name,role:'panelist'};a++;});save(d);closeModal();pgPanelists(document.getElementById('pg'));alert('✅ Imported '+a+'. Skipped '+s+'.');}
+
+/* ─── PANELS ─── */
+function pgPanels(el){
+  const d=db();d.panels=d.panels||[];
+  const cards=d.panels.map(pn=>{
+    const mems=(pn.memberIds||[]).map(id=>d.panelists.find(p=>p.id===id)).filter(Boolean);
+    const cands=(pn.candidateIds||[]).map(id=>d.candidates.find(c=>c.id===id)).filter(Boolean);
+    const memPills=mems.map(m=>`<span style="display:inline-flex;align-items:center;gap:.3rem;background:rgba(30,41,59,.7);border:1px solid var(--bd);padding:.2rem .6rem;border-radius:16px;font-size:.74rem;color:#e2e8f0;margin:.15rem"><span class="av" style="width:22px;height:22px;font-size:.56rem">${av(m.name)}</span>${m.name}</span>`).join('');
+    const candPills=cands.map(c=>`<span class="cand-pill">👤 ${c.name}<button class="rm" title="Remove" onclick="removeCandFromPanel(${pn.id},${c.id})">✕</button></span>`).join('');
+    return`<div class="pncard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.9rem;flex-wrap:wrap;gap:.45rem">
+        <div>
+          <div style="font-size:1.05rem;font-weight:700;color:#fff">${pn.name}</div>
+          <div style="color:var(--mu);font-size:.8rem;margin-top:.12rem">${pn.description||'No description'}</div>
+        </div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+          <button class="ab abg" onclick="mAllocCands(${pn.id})">👥 Allocate Candidates</button>
+          <button class="ab" onclick="mMembers(${pn.id})">⚙️ Members</button>
+          <button class="ab" onclick="mEditPanel(${pn.id})">✏️</button>
+          <button class="ab abr" onclick="delPanel(${pn.id})">🗑️</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.75rem">
+        <span class="badge binfo">👨‍💼 ${mems.length} member${mems.length!==1?'s':''}</span>
+        <span class="badge bok">👥 ${cands.length} candidate${cands.length!==1?'s':''}</span>
+      </div>
+      ${mems.length?`<div style="margin-bottom:.7rem"><div style="font-size:.73rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">PANELISTS</div><div>${memPills}</div></div>`:''}
+      <div>
+        <div style="font-size:.73rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">ALLOCATED CANDIDATES</div>
+        ${cands.length?`<div>${candPills}</div>`:'<span style="color:var(--mu);font-size:.8rem;font-style:italic">No candidates allocated yet — click Allocate Candidates</span>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div class="card">
+      <div class="ch"><h2 class="ctitle">🗂️ Interview Panels</h2><button class="btn btn-s btn-sm" onclick="mCreatePanel()">➕ Create Panel</button></div>
+      <div class="ibox" style="margin-bottom:1rem"><strong>ℹ️ How Panels Work</strong><div class="fhint" style="margin-top:.3rem">Create panels, assign panelists as members, then allocate specific candidates to each panel. Panelists only see candidates allocated to their panels during evaluation.</div></div>
+      ${d.panels.length?cards:'<div class="empty">📭 No panels yet.<br>Click ➕ Create Panel to start organising interviews.</div>'}
+    </div>`;
+}
+
+/* ─── ALLOCATE CANDIDATES TO PANEL ─── */
+let allocQ='';
+function mAllocCands(panelId){
+  allocQ='';
+  renderAllocModal(panelId);
+}
+function renderAllocModal(panelId){
+  const d=db();const pn=d.panels.find(p=>p.id===panelId);if(!pn)return;
+  pn.candidateIds=pn.candidateIds||[];
+  if(!d.candidates.length){alert('No candidates yet. Add candidates in the Candidates tab first.');return;}
+  const q=allocQ.toLowerCase().trim();
+  const filtered=d.candidates.filter(c=>!q||(c.name.toLowerCase().includes(q)||c.email.toLowerCase().includes(q)||c.phone.includes(q)||c.candidateId.includes(q)));
+  const items=filtered.map(c=>{
+    const sel=pn.candidateIds.includes(c.id);
+    const evs=d.evaluations.filter(e=>e.candidateId===c.id&&e.status==='done').length;
+    return`<div class="cal-item${sel?' sel':''}" onclick="toggleCandAlloc(${panelId},${c.id})" id="ci_${panelId}_${c.id}">
+      <div style="display:flex;align-items:center;gap:.65rem;min-width:0">
+        <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${sel?'var(--g)':'var(--bd)'};background:${sel?'var(--g)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;transition:all .18s">${sel?'✓':''}</div>
+        <div class="av" style="width:30px;height:30px;font-size:.6rem;flex-shrink:0">${av(c.name)}</div>
+        <div style="min-width:0">
+          <div style="font-weight:700;color:#fff;font-size:.88rem">${hl(c.name,q)}</div>
+          <div style="color:var(--mu);font-size:.75rem">${c.position} · ${hl(c.phone,q)}</div>
+          <div style="color:var(--mu);font-size:.73rem">${hl(c.email,q)}</div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${evs?`<span class="badge bok" style="font-size:.68rem">${evs} eval</span>`:'<span class="badge bwarn" style="font-size:.68rem">⏳ none</span>'}
+        ${sel?'<div style="color:var(--g);font-size:.7rem;margin-top:.2rem;font-weight:700">✅ Selected</div>':''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const selCnt=pn.candidateIds.length;
+  openModal(`<div class="mhdr"><span class="mtitle">👥 Allocate Candidates — ${pn.name}</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="ibox" style="margin-bottom:.8rem"><strong>${selCnt} candidate${selCnt!==1?'s':''} allocated</strong> — click rows to toggle selection</div>
+    <div class="sbar" style="margin-bottom:.8rem"><span class="sico2">🔍</span><input type="text" placeholder="Search by name, phone, email, or ID…" value="${allocQ}" oninput="allocQ=this.value;renderAllocModal(${panelId})" id="allocSearch">${allocQ?`<button class="clr" onclick="allocQ='';renderAllocModal(${panelId})">✕</button>`:''}</div>
+    <div style="display:flex;gap:.45rem;margin-bottom:.75rem;flex-wrap:wrap">
+      <button class="ab abg" onclick="selectAllAlloc(${panelId})" style="font-size:.78rem">✅ Select All${q?' Filtered':''}</button>
+      <button class="ab abr" onclick="clearAllAlloc(${panelId})" style="font-size:.78rem">✕ Clear All</button>
+    </div>
+    <div style="max-height:46vh;overflow-y:auto;padding-right:.2rem" id="allocList">
+      ${items||'<div class="empty" style="padding:1.5rem">🔍 No candidates match your search.</div>'}
+    </div>
+    <div class="br" style="margin-top:.9rem">
+      <button class="btn btn-d" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-s" onclick="closeModal();pgPanels(document.getElementById(\'pg\'))">✅ Done (${selCnt} allocated)</button>
+    </div>`);
+  setTimeout(()=>{const s=document.getElementById('allocSearch');if(s)s.focus();},80);
+}
+
+function toggleCandAlloc(panelId,candId){
+  const d=db();const pn=d.panels.find(p=>p.id===panelId);if(!pn)return;
+  pn.candidateIds=pn.candidateIds||[];
+  if(pn.candidateIds.includes(candId))pn.candidateIds=pn.candidateIds.filter(id=>id!==candId);
+  else pn.candidateIds.push(candId);
+  save(d);renderAllocModal(panelId);
+}
+function selectAllAlloc(panelId){
+  const d=db();const pn=d.panels.find(p=>p.id===panelId);if(!pn)return;
+  pn.candidateIds=pn.candidateIds||[];
+  const q=allocQ.toLowerCase().trim();
+  const toAdd=d.candidates.filter(c=>!q||(c.name.toLowerCase().includes(q)||c.email.toLowerCase().includes(q)||c.phone.includes(q)||c.candidateId.includes(q)));
+  toAdd.forEach(c=>{if(!pn.candidateIds.includes(c.id))pn.candidateIds.push(c.id);});
+  save(d);renderAllocModal(panelId);
+}
+function clearAllAlloc(panelId){
+  if(!confirm('Clear all candidate allocations for this panel?'))return;
+  const d=db();const pn=d.panels.find(p=>p.id===panelId);if(!pn)return;
+  pn.candidateIds=[];save(d);renderAllocModal(panelId);
+}
+function removeCandFromPanel(panelId,candId){
+  const d=db();const pn=d.panels.find(p=>p.id===panelId);if(!pn)return;
+  pn.candidateIds=(pn.candidateIds||[]).filter(id=>id!==candId);
+  save(d);pgPanels(document.getElementById('pg'));
+}
+
+function mCreatePanel(){
+  openModal(`<div class="mhdr"><span class="mtitle">➕ Create Panel</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="fg"><label class="fl">Panel Name <span class="req">*</span></label><input type="text" id="pgn" class="fi" placeholder="e.g. Technical Interview Panel"></div>
+    <div class="fg"><label class="fl">Description</label><input type="text" id="pgd" class="fi" placeholder="e.g. For senior engineering roles"></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="savePanel()">✅ Create</button></div>
+    <script>setTimeout(()=>document.getElementById('pgn').focus(),80)<\/script>`);
+}
+function savePanel(){
+  const n=document.getElementById('pgn').value.trim(),desc=document.getElementById('pgd').value.trim();
+  if(!n){alert('❌ Please enter a panel name.');return;}
+  const d=db();d.panels.push({id:d.npg++,name:n,description:desc,memberIds:[],candidateIds:[]});save(d);closeModal();pgPanels(document.getElementById('pg'));
+}
+function mEditPanel(id){
+  const d=db();const pn=d.panels.find(p=>p.id===id);if(!pn)return;
+  openModal(`<div class="mhdr"><span class="mtitle">✏️ Edit Panel</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="fg"><label class="fl">Panel Name <span class="req">*</span></label><input type="text" id="epgn" class="fi" value="${pn.name}"></div>
+    <div class="fg"><label class="fl">Description</label><input type="text" id="epgd" class="fi" value="${pn.description||''}"></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="updPanel(${id})">💾 Save</button></div>`);
+}
+function updPanel(id){
+  const n=document.getElementById('epgn').value.trim(),desc=document.getElementById('epgd').value.trim();
+  if(!n){alert('❌ Please enter a panel name.');return;}
+  const d=db();const pn=d.panels.find(p=>p.id===id);if(pn){pn.name=n;pn.description=desc;save(d);}
+  closeModal();pgPanels(document.getElementById('pg'));
+}
+function delPanel(id){
+  const d=db();const pn=d.panels.find(p=>p.id===id);if(!pn)return;
+  if(!confirm('🗑️ Delete panel "'+pn.name+'"?\n\nPanelists & candidates are NOT removed — only this group.'))return;
+  d.panels=d.panels.filter(p=>p.id!==id);save(d);pgPanels(document.getElementById('pg'));
+}
+function mMembers(panelId){
+  const d=db();const pn=d.panels.find(p=>p.id===panelId);if(!pn)return;
+  pn.memberIds=pn.memberIds||[];
+  if(!d.panelists.length){alert('No panelists yet. Add them in the Panelists tab first.');return;}
+  const chks=d.panelists.map(p=>`
+    <label style="display:flex;align-items:center;gap:.75rem;padding:.75rem .9rem;background:rgba(30,41,59,.4);border:1.5px solid ${pn.memberIds.includes(p.id)?'var(--p)':'var(--bd)'};border-radius:9px;cursor:pointer;margin-bottom:.4rem;transition:all .16s">
+      <input type="checkbox" value="${p.id}" ${pn.memberIds.includes(p.id)?'checked':''} style="width:16px;height:16px;accent-color:var(--p)">
+      <div class="av">${av(p.name)}</div>
+      <div><div style="font-weight:600;color:#fff;font-size:.9rem">${p.name}</div><div style="color:var(--mu);font-size:.77rem">${p.position} · ${p.email}</div></div>
+    </label>`).join('');
+  openModal(`<div class="mhdr"><span class="mtitle">⚙️ Panelist Members — ${pn.name}</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <p style="color:var(--mu);font-size:.84rem;margin-bottom:.9rem">Select panelists to include in this panel.</p>
+    <div id="mbx">${chks}</div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="saveMembers(${panelId})">💾 Save Members</button></div>`);
+}
+function saveMembers(id){
+  const d=db();const pn=d.panels.find(p=>p.id===id);if(!pn)return;
+  pn.memberIds=Array.from(document.querySelectorAll('#mbx input:checked')).map(cb=>parseInt(cb.value));
+  save(d);closeModal();pgPanels(document.getElementById('pg'));alert('✅ Panel updated with '+pn.memberIds.length+' member(s).');
+}
+
+/* ─── QUESTIONS ─── */
+function pgQuestions(el){
+  const d=db();
+  const secs=d.sections.map(sec=>`
+    <div style="background:rgba(30,41,59,.35);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:.9rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;flex-wrap:wrap;gap:.45rem">
+        <h3 style="font-size:1rem;font-weight:700">${sec.name} <span style="color:var(--mu);font-size:.78rem;font-weight:400">(${sec.questions.length})</span></h3>
+        <div><button class="ab abg" onclick="mAddQ(${sec.id})" style="margin-right:.3rem">➕ Add Q</button><button class="ab abr" onclick="delSection(${sec.id})">🗑️ Section</button></div>
+      </div>
+      ${sec.questions.length?sec.questions.map((q,i)=>`<div class="qc"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><span style="color:#e2e8f0;font-size:.87rem"><strong style="color:var(--mu)">Q${i+1}:</strong> ${q.text}</span><button class="ab abr" style="flex-shrink:0" onclick="delQuestion(${sec.id},${q.id})">🗑️</button></div></div>`).join(''):'<p style="text-align:center;color:var(--mu);padding:.4rem;font-size:.82rem">No questions yet</p>'}
+    </div>`).join('');
+  el.innerHTML=`<div class="card">
+    <div class="ch"><h2 class="ctitle">📝 Question Bank <span class="bai">🤖 AI</span></h2>
+      <div class="bg"><button class="btn btn-ai btn-sm" onclick="mAIGen()">✨ AI Generate</button><button class="btn btn-p btn-sm" onclick="mUpQ()">📤 Upload</button><button class="btn btn-s btn-sm" onclick="mAddSection()">➕ Section</button></div>
+    </div>
+    ${d.sections.length?secs:'<div class="empty">📭 No sections yet.</div>'}
+  </div>`;
+}
+function mAddSection(){
+  openModal(`<div class="mhdr"><span class="mtitle">➕ Add Section</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="fg"><label class="fl">Section Name <span class="req">*</span></label><input type="text" id="sn" class="fi" placeholder="e.g. Leadership Skills"></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="saveSection()">💾 Save</button></div>
+    <script>setTimeout(()=>document.getElementById('sn').focus(),80)<\/script>`);
+}
+function saveSection(){
+  const n=document.getElementById('sn').value.trim();if(!n)return;
+  const d=db();d.sections.push({id:d.ns++,name:n,questions:[]});save(d);closeModal();pgQuestions(document.getElementById('pg'));
+}
+function delSection(id){
+  const d=db();const s=d.sections.find(x=>x.id===id);if(!s)return;
+  if(!confirm('🗑️ Delete section "'+s.name+'" and all '+s.questions.length+' question(s)?'))return;
+  d.sections=d.sections.filter(x=>x.id!==id);save(d);pgQuestions(document.getElementById('pg'));
+}
+function mAddQ(secId){
+  const d=db();const sec=d.sections.find(s=>s.id===secId);
+  openModal(`<div class="mhdr"><span class="mtitle">➕ Question — ${sec.name}</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="fg"><label class="fl">Question Text <span class="req">*</span></label><textarea id="qt" class="fta" placeholder="Type your interview question..."></textarea></div>
+    <div class="br"><button class="btn btn-d" onclick="closeModal()">Cancel</button><button class="btn btn-s" onclick="saveQ(${secId})">💾 Add</button></div>
+    <script>setTimeout(()=>document.getElementById('qt').focus(),80)<\/script>`);
+}
+function saveQ(secId){
+  const t=document.getElementById('qt').value.trim();if(!t)return;
+  const d=db();const sec=d.sections.find(s=>s.id===secId);if(sec){sec.questions.push({id:d.nq++,text:t});save(d);}closeModal();pgQuestions(document.getElementById('pg'));
+}
+function delQuestion(secId,qId){
+  const d=db();const sec=d.sections.find(s=>s.id===secId);if(!sec)return;
+  if(!confirm('🗑️ Delete this question?'))return;
+  sec.questions=sec.questions.filter(q=>q.id!==qId);save(d);pgQuestions(document.getElementById('pg'));
+}
+function mUpQ(){
+  openModal(`<div class="mhdr"><span class="mtitle">📤 Upload Questions</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="ibox"><strong>Format:</strong><div class="fhint" style="margin-top:.3rem">Columns: section, question</div></div>
+    <div class="tr2"><button class="tbtn" onclick="dlTmpl('questions','csv')">📄 CSV</button><button class="tbtn" onclick="dlTmpl('questions','xlsx')">📊 Excel</button></div>
+    <div class="uz" id="quz" onclick="document.getElementById('quf').click()"><div style="font-size:1.8rem;margin-bottom:.4rem">📁</div><div style="font-weight:600;font-size:.9rem">Click or drag & drop</div></div>
+    <input type="file" id="quf" style="display:none" accept=".csv,.xlsx,.xls" onchange="parseQF(event)"><div id="qup"></div>
+    <script>const quz=document.getElementById('quz');quz.addEventListener('dragover',e=>{e.preventDefault();quz.classList.add('over')});quz.addEventListener('dragleave',()=>quz.classList.remove('over'));quz.addEventListener('drop',e=>{e.preventDefault();quz.classList.remove('over');const f=e.dataTransfer.files[0];if(f)parseQF({target:{files:[f]}})});<\/script>`);
+}
+function parseQF(ev){const f=ev.target.files[0];if(!f)return;f.name.endsWith('.csv')?Papa.parse(f,{header:true,complete:r=>prevQs(r.data)}):(r=>{r.onload=e=>{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});prevQs(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]))};r.readAsArrayBuffer(f)})(new FileReader());}
+function prevQs(rows){const v=rows.filter(r=>r.section&&r.question);document.getElementById('qup').innerHTML=`<div class="pstats"><div class="ps"><div class="psv">${rows.length}</div><div class="psl">Total</div></div><div class="ps"><div class="psv" style="color:var(--g)">${v.length}</div><div class="psl">Valid</div></div><div class="ps"><div class="psv">${[...new Set(v.map(r=>r.section))].length}</div><div class="psl">Sections</div></div></div>${v.length?`<button class="btn btn-s" style="margin-top:.8rem" onclick='importQs(${JSON.stringify(v)})'>✅ Import ${v.length}</button>`:''}`;}
+function importQs(rows){const d=db();rows.forEach(r=>{let sec=d.sections.find(s=>s.name.toLowerCase()===r.section.toLowerCase());if(!sec){sec={id:d.ns++,name:r.section,questions:[]};d.sections.push(sec);}sec.questions.push({id:d.nq++,text:r.question});});save(d);closeModal();pgQuestions(document.getElementById('pg'));alert('✅ Imported '+rows.length+' question(s)!');}
+function mAIGen(){
+  const roles={'Software Engineer':{'Technical Skills':['Describe your experience with OOP and design patterns','How do you ensure code quality?'],'Problem Solving':['Describe optimizing code for performance'],'Collaboration':['How do you handle code reviews?']},'Product Manager':{'Strategy':['How do you prioritise features?'],'Stakeholders':['How do you manage conflicting priorities?']},'Data Scientist':{'Technical Skills':['Explain ML model evaluation','How do you handle imbalanced datasets?']},'UX Designer':{'Design':['Walk through your design process']},'HR Manager':{'Recruitment':['How do you source and screen candidates?']}};
+  const opts=Object.keys(roles).map(r=>`<option value="${r}">${r}</option>`).join('');
+  openModal(`<div class="mhdr"><span class="mtitle">✨ AI Question Generator</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div class="aibox"><div class="aittl">🤖 Role-Specific Questions</div><p style="color:var(--mu);font-size:.85rem">Select a role to generate professionally crafted questions.</p></div>
+    <div class="fg"><label class="fl">Position Type</label><select id="aiRole" class="fs" onchange="renderAI(${JSON.stringify(roles).replace(/"/g,'&quot;')})"><option value="">-- Choose role --</option>${opts}</select></div>
+    <div id="aiSugg"></div>`);
+}
+function renderAI(roles){
+  const r=document.getElementById('aiRole').value;if(!r||!roles[r]){document.getElementById('aiSugg').innerHTML='';return;}
+  let h='<div style="margin-top:.85rem">';
+  Object.entries(roles[r]).forEach(([sec,qs])=>{
+    h+=`<div style="background:rgba(30,41,59,.4);border-radius:9px;padding:.85rem;margin-bottom:.7rem"><strong style="color:#818cf8">${sec}</strong><div style="margin-top:.6rem">`;
+    qs.forEach((q,i)=>{h+=`<label style="display:flex;gap:.65rem;align-items:flex-start;margin-bottom:.45rem;cursor:pointer"><input type="checkbox" id="aiq_${sec}_${i}" value="${sec}|||${q}" style="margin-top:3px;width:15px;height:15px;flex-shrink:0;accent-color:var(--p)"><span style="color:#e2e8f0;font-size:.85rem">${q}</span></label>`;});
+    h+='</div></div>';
+  });
+  h+=`<button class="btn btn-ai" onclick="importAIQs()">✅ Add Selected</button></div>`;
+  document.getElementById('aiSugg').innerHTML=h;
+}
+function importAIQs(){
+  const chk=document.querySelectorAll('#aiSugg input:checked');if(!chk.length){alert('⚠️ Select at least one question.');return;}
+  const d=db();let a=0;
+  chk.forEach(cb=>{const[sn,qt]=cb.value.split('|||');let sec=d.sections.find(s=>s.name===sn);if(!sec){sec={id:d.ns++,name:sn,questions:[]};d.sections.push(sec);}sec.questions.push({id:d.nq++,text:qt});a++;});
+  save(d);closeModal();pgQuestions(document.getElementById('pg'));alert('✅ Added '+a+' question(s)!');
+}
+
+/* ─── EVALUATIONS (admin) ─── */
+function pgEvals(el){
+  const d=db();
+  const rows=d.evaluations.map(e=>`<tr>
+    <td><strong style="color:#fff">${e.candidateName}</strong></td>
+    <td style="color:var(--mu)">${e.panelistName}</td>
+    <td><strong>${e.avgScore.toFixed(1)}/5</strong><div class="pb"><div class="pf" style="width:${(e.avgScore/5)*100}%"></div></div></td>
+    <td><span class="badge bok">Completed</span></td>
+    <td style="color:var(--mu)">${e.date}</td>
+    <td style="color:var(--mu);font-size:.8rem;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.comment||'—'}</td>
+  </tr>`).join('');
+  el.innerHTML=`<div class="card">
+    <div class="ch"><h2 class="ctitle">⭐ All Evaluations</h2><span style="color:var(--mu);font-size:.85rem">${d.evaluations.length} total</span></div>
+    ${d.evaluations.length?`<div class="tw"><table><thead><tr><th>Candidate</th><th>Panelist</th><th>Score</th><th>Status</th><th>Date</th><th>Comment</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">📭 No evaluations yet.</div>'}
+  </div>`;
+}
+
+/* ─── MY EVALUATIONS (panelist) ─── */
+let mef='all', meq='', mepanel='all';
+function pgMyEvals(el){
+  const d=db();
+  const myPanelist=d.panelists.find(p=>p.email===CU.email);
+  const myPanels=(d.panels||[]).filter(pn=>(pn.memberIds||[]).includes(myPanelist?.id));
+
+  // active panel filter
+  const activePanels=mepanel==='all'?myPanels:myPanels.filter(p=>p.id===parseInt(mepanel));
+
+  // collect candidates from active panels
+  const allocatedIds=new Set();
+  activePanels.forEach(pn=>(pn.candidateIds||[]).forEach(id=>allocatedIds.add(id)));
+  // fallback: no panels at all → show everyone
+  const inAnyPanel=new Set();
+  myPanels.forEach(pn=>(pn.candidateIds||[]).forEach(id=>inAnyPanel.add(id)));
+  let baseCands=inAnyPanel.size
+    ?(mepanel==='all'?d.candidates.filter(c=>inAnyPanel.has(c.id)):d.candidates.filter(c=>allocatedIds.has(c.id)))
+    :d.candidates;
+
+  // search filter
+  const q=meq.toLowerCase().trim();
+  if(q)baseCands=baseCands.filter(c=>c.name.toLowerCase().includes(q)||c.email.toLowerCase().includes(q)||c.phone.includes(q)||c.position.toLowerCase().includes(q));
+
+  let list=baseCands;
+  if(mef==='done')list=baseCands.filter(c=>d.evaluations.some(e=>e.candidateId===c.id&&e.panelistEmail===CU.email));
+  if(mef==='todo')list=baseCands.filter(c=>!d.evaluations.some(e=>e.candidateId===c.id&&e.panelistEmail===CU.email));
+  const done=baseCands.filter(c=>d.evaluations.some(e=>e.candidateId===c.id&&e.panelistEmail===CU.email)).length;
+
+  // ── Panel filter tabs (only shown if member of 2+ panels) ──
+  let panelFilterBar='';
+  if(myPanels.length>=1){
+    const allCount=d.candidates.filter(c=>inAnyPanel.has(c.id)).length;
+    const panelTabs=[{k:'all',l:`📋 All Panels (${allCount})`},...myPanels.map(p=>{
+      const cnt=(p.candidateIds||[]).filter(id=>d.candidates.some(c=>c.id===id)).length;
+      const pdone=(p.candidateIds||[]).filter(id=>d.evaluations.some(e=>e.candidateId===id&&e.panelistEmail===CU.email&&e.status==='done')).length;
+      return{k:String(p.id),l:`🗂️ ${p.name} (${cnt})`};
+    })];
+    panelFilterBar=`
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.74rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem">Filter by Panel</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          ${panelTabs.map(t=>{
+            const isActive=mepanel===t.k;
+            // per-panel progress
+            let prog='';
+            if(t.k!=='all'){
+              const pn=myPanels.find(p=>String(p.id)===t.k);
+              const total=(pn?.candidateIds||[]).filter(id=>d.candidates.some(c=>c.id===id)).length;
+              const doneCount=(pn?.candidateIds||[]).filter(id=>d.evaluations.some(e=>e.candidateId===id&&e.panelistEmail===CU.email&&e.status==='done')).length;
+              const pct=total?Math.round(doneCount/total*100):0;
+              prog=`<div style="margin-top:.28rem;height:3px;background:rgba(99,102,241,.18);border-radius:3px;width:100%"><div style="height:100%;width:${pct}%;background:${isActive?'#fff':'var(--g)'};border-radius:3px;transition:width .3s"></div></div>`;
+            }
+            return`<button onclick="mepanel='${t.k}';mef='all';pgMyEvals(document.getElementById('pg'))"
+              style="padding:.52rem 1rem;border-radius:9px;border:2px solid ${isActive?'var(--p)':'var(--bd)'};background:${isActive?'linear-gradient(135deg,var(--p),var(--pk))':'rgba(30,41,59,.5)'};color:${isActive?'#fff':'var(--mu)'};font-weight:700;cursor:pointer;font-family:inherit;font-size:.8rem;transition:all .2s;min-width:110px;text-align:left">
+              ${t.l}${prog}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  // ── Active panel summary card ──
+  let panelSummary='';
+  if(mepanel!=='all'&&myPanels.length){
+    const ap=myPanels.find(p=>String(p.id)===mepanel);
+    if(ap){
+      const total=(ap.candidateIds||[]).filter(id=>d.candidates.some(c=>c.id===id)).length;
+      const doneCount=(ap.candidateIds||[]).filter(id=>d.evaluations.some(e=>e.candidateId===id&&e.panelistEmail===CU.email&&e.status==='done')).length;
+      const pct=total?Math.round(doneCount/total*100):0;
+      const mems=(ap.memberIds||[]).map(id=>d.panelists.find(p=>p.id===id)).filter(Boolean);
+      panelSummary=`
+        <div style="background:rgba(99,102,241,.07);border:1.5px solid rgba(99,102,241,.25);border-radius:13px;padding:1.1rem 1.25rem;margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.6rem;margin-bottom:.75rem">
+            <div>
+              <div style="font-size:1.05rem;font-weight:800;color:#fff">🗂️ ${ap.name}</div>
+              <div style="color:var(--mu);font-size:.8rem;margin-top:.15rem">${ap.description||'No description'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:1.6rem;font-weight:800;color:${pct===100?'var(--g)':'var(--p)'}">${pct}%</div>
+              <div style="color:var(--mu);font-size:.72rem">your progress</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-bottom:.75rem">
+            <div style="background:rgba(30,41,59,.6);border-radius:8px;padding:.6rem;text-align:center"><div style="font-size:1.3rem;font-weight:800;color:var(--p)">${total}</div><div style="color:var(--mu);font-size:.7rem">Candidates</div></div>
+            <div style="background:rgba(30,41,59,.6);border-radius:8px;padding:.6rem;text-align:center"><div style="font-size:1.3rem;font-weight:800;color:var(--g)">${doneCount}</div><div style="color:var(--mu);font-size:.7rem">Evaluated</div></div>
+            <div style="background:rgba(30,41,59,.6);border-radius:8px;padding:.6rem;text-align:center"><div style="font-size:1.3rem;font-weight:800;color:var(--w)">${total-doneCount}</div><div style="color:var(--mu);font-size:.7rem">Remaining</div></div>
+          </div>
+          <div style="margin-bottom:.55rem"><div style="display:flex;justify-content:space-between;font-size:.76rem;color:var(--mu);margin-bottom:.3rem"><span>Completion</span><span>${doneCount}/${total}</span></div><div class="pb"><div class="pf" style="width:${pct}%;background:${pct===100?'linear-gradient(90deg,var(--g),#059669)':''}"></div></div></div>
+          ${mems.length?`<div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-top:.5rem"><span style="font-size:.72rem;color:var(--mu);font-weight:600">CO-PANELISTS:</span>${mems.filter(m=>m.email!==CU.email).map(m=>`<span style="display:inline-flex;align-items:center;gap:.3rem;background:rgba(30,41,59,.7);border:1px solid var(--bd);padding:.18rem .55rem;border-radius:16px;font-size:.72rem;color:#e2e8f0"><span class="av" style="width:20px;height:20px;font-size:.54rem">${av(m.name)}</span>${m.name}</span>`).join('')}</div>`:''}
+        </div>`;
+    }
+  } else if(!myPanels.length){
+    panelSummary=`<div class="ibox" style="margin-bottom:.85rem"><strong>ℹ️ Not assigned to any panel</strong><div class="fhint" style="margin-top:.25rem">Ask your admin to add you to an interview panel. Showing all candidates as fallback.</div></div>`;
+  }
+
+  const cards=list.map(c=>{
+    const evs=d.evaluations.filter(e=>e.candidateId===c.id&&e.status==='done');
+    const mine=evs.find(e=>e.panelistEmail===CU.email);
+    const avg=evs.length?(evs.reduce((s,e)=>s+e.avgScore,0)/evs.length).toFixed(1):'N/A';
+    const cPanels=myPanels.filter(pn=>(pn.candidateIds||[]).includes(c.id)).map(pn=>pn.name);
+    return`<div class="crow" onclick="startEval(${c.id})">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.15rem">${hl(c.name,q)}</div>
+        <div style="color:var(--mu);font-size:.83rem">${c.position} · ${hl(c.phone,q)}</div>
+        ${mepanel==='all'&&cPanels.length?`<div style="margin-top:.22rem">${cPanels.map(n=>`<span style="background:rgba(99,102,241,.1);color:#818cf8;padding:.1rem .42rem;border-radius:6px;font-size:.7rem;margin-right:.2rem">${n}</span>`).join('')}</div>`:''}
+        ${mine?`<div style="color:var(--mu);font-size:.74rem;margin-top:.2rem">Your score: <strong style="color:var(--g)">${mine.avgScore.toFixed(1)}/5</strong> · ${mine.date}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-size:.64rem;color:var(--mu);text-transform:uppercase;margin-bottom:.1rem">Avg</div><div style="font-weight:700;color:#fff">${avg}${avg!=='N/A'?'/5':''}</div></div>
+        <div style="text-align:center"><div style="font-size:.64rem;color:var(--mu);text-transform:uppercase;margin-bottom:.1rem">Evals</div><div style="font-weight:700;color:#fff">${evs.length}</div></div>
+        <span class="badge ${mine?'bok':'bwarn'}">${mine?'✅ Done':'⏳ Pending'}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="card">
+    <div class="ch"><h2 class="ctitle">📝 My Evaluations</h2><span style="color:var(--mu);font-size:.83rem">As <strong style="color:#fff">${CU.name}</strong></span></div>
+    ${panelFilterBar}
+    ${panelSummary}
+    <div class="sbar"><span class="sico2">🔍</span><input type="text" placeholder="Search candidates by name, phone, or email…" value="${meq}" oninput="meq=this.value;pgMyEvals(document.getElementById('pg'))">${meq?`<button class="clr" onclick="meq='';pgMyEvals(document.getElementById('pg'))">✕</button>`:''}</div>
+    <div class="chips">${chips([{k:'all',l:'All ('+baseCands.length+')'},{k:'done',l:'✅ Done ('+done+')'},{k:'todo',l:'⏳ Pending ('+(baseCands.length-done)+')'}],mef,'setMEF')}</div>
+    ${list.length?cards:`<div class="empty">${q?'🔍 No candidates match "'+meq+'"':'📭 No candidates to evaluate in this panel.'}</div>`}
+  </div>`;
+}
+function setMEF(k){mef=k;pgMyEvals(document.getElementById('pg'));}
+
+/* ─── EVAL FORM ─── */
+let eS={};
+function startEval(candId){
+  const d=db();const cand=d.candidates.find(c=>c.id===candId);if(!cand)return;
+  let tq=0;d.sections.forEach(s=>tq+=s.questions.length);
+  if(!tq){alert('❌ No questions set up. Ask admin to add evaluation questions.');return;}
+  eS={};const el=document.getElementById('pg');
+  const secs=d.sections.map(sec=>`
+    <div style="background:rgba(30,41,59,.35);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:.9rem">
+      <h3 style="font-size:.98rem;font-weight:700;margin-bottom:.8rem;padding-bottom:.6rem;border-bottom:1px solid var(--bd)">${sec.name}</h3>
+      ${sec.questions.map(q=>`<div class="qc"><p style="font-weight:600;color:#e2e8f0;margin-bottom:.6rem;font-size:.88rem">${q.text}</p>
+        <div style="display:flex;gap:.45rem;margin-bottom:.55rem;flex-wrap:wrap;align-items:center">
+          ${[0,1,2,3,4,5].map(n=>`<button type="button" class="sbtn" id="sb_${q.id}_${n}" onclick="pickS(${q.id},${n},${tq})">${n}</button>`).join('')}
+          <span style="color:var(--mu);font-size:.75rem;margin-left:.3rem">0=Poor · 5=Excellent</span>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+  el.innerHTML=`<div class="card">
+    <div class="ch"><h2 class="ctitle">📝 Evaluating: ${cand.name}</h2><button class="btn btn-d btn-sm" onclick="goTo('myevals')">← Back</button></div>
+    <div style="background:rgba(99,102,241,.07);border:1px solid var(--bd);border-radius:12px;padding:1rem;margin-bottom:1.1rem">
+      <div style="font-size:1.05rem;font-weight:700;margin-bottom:.18rem">${cand.name}</div>
+      <div style="color:var(--mu);font-size:.85rem">${cand.position} · ${cand.phone}</div>
+    </div>
+    <div class="fg"><label class="fl">Select Your Name <span class="req">*</span></label>
+      <select id="pPick" class="fs" onchange="chkDup(${candId})">
+        <option value="">-- Select Panelist --</option>
+        ${d.panelists.map(p=>`<option value="${p.email}" ${CU.role==='panelist'&&p.email===CU.email?'selected':''}>${p.name} (${p.position})</option>`).join('')}
+      </select></div>
+    <div style="background:rgba(30,41,59,.4);border-radius:10px;padding:.9rem;margin-bottom:1.1rem">
+      <div style="display:flex;justify-content:space-between;margin-bottom:.35rem;font-size:.82rem"><span style="color:var(--mu)">Progress</span><span id="pTxt" style="color:var(--mu)">0/${tq} answered</span></div>
+      <div class="pb"><div class="pf" id="pBar" style="width:0%"></div></div>
+    </div>
+    ${secs}
+    <div class="fg" style="margin-top:1.1rem"><label class="fl">Overall Comment</label><textarea id="eCmt" class="fta" placeholder="Your overall assessment..."></textarea></div>
+    <button class="btn btn-s" style="margin-top:.85rem" onclick="submitEval(${candId},'${cand.name}',${tq})">✅ Submit Evaluation</button>
+  </div>`;
+}
+function pickS(qId,score,total){
+  eS[qId]=score;
+  for(let i=0;i<=5;i++){const b=document.getElementById('sb_'+qId+'_'+i);if(b)b.className='sbtn'+(i===score?' on':'');}
+  const done=Object.keys(eS).length;
+  const pb=document.getElementById('pBar'),pt=document.getElementById('pTxt');
+  if(pb)pb.style.width=(done/total*100)+'%';if(pt)pt.textContent=done+'/'+total+' answered';
+}
+function chkDup(candId){
+  const em=document.getElementById('pPick').value;if(!em)return;
+  const d=db();const ex=d.evaluations.find(e=>e.candidateId===candId&&e.panelistEmail===em&&e.status==='done');
+  if(ex){alert('⚠️ '+em+' already evaluated this candidate.\nScore: '+ex.avgScore.toFixed(1)+'/5 | Date: '+ex.date);document.getElementById('pPick').value='';}
+}
+function submitEval(candId,candName,total){
+  const em=document.getElementById('pPick').value;if(!em){alert('⚠️ Please select your name.');return;}
+  if(Object.keys(eS).length<total){alert('⚠️ Answer all questions. '+(total-Object.keys(eS).length)+' remaining.');return;}
+  const d=db();const pan=d.panelists.find(p=>p.email===em);
+  if(d.evaluations.find(e=>e.candidateId===candId&&e.panelistEmail===em&&e.status==='done')){alert('❌ Already evaluated this candidate.');return;}
+  const avg=Object.values(eS).reduce((a,b)=>a+b,0)/total;
+  d.evaluations.push({id:d.ne++,candidateId:candId,candidateName:candName,panelistEmail:em,panelistName:pan.name,scores:{...eS},avgScore:avg,comment:document.getElementById('eCmt').value||'',status:'done',date:new Date().toLocaleDateString()});
+  save(d);
+  const all=d.evaluations.filter(e=>e.candidateId===candId&&e.status==='done');
+  const finalAvg=all.reduce((s,e)=>s+e.avgScore,0)/all.length;
+  alert('🎉 Submitted!\nYour Score: '+avg.toFixed(1)+'/5\nCurrent Average: '+finalAvg.toFixed(1)+'/5 ('+all.length+' eval(s))');
+  goTo('myevals');
+}
+
+/* ─── AI ANALYSIS MODAL ─── */
+function showAI(candId){
+  const d=db();const cand=d.candidates.find(c=>c.id===candId);if(!cand)return;
+  const evs=d.evaluations.filter(e=>e.candidateId===candId&&e.status==='done');
+  const an=aiAnalysis(cand,evs);const col=recCol(an.rec);
+  const skillBars=Object.entries(an.skills).map(([sk,sc])=>`<div style="margin-bottom:.6rem"><div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.28rem"><span style="color:#e2e8f0;font-weight:600">${sk}</span><span style="color:var(--mu)">${sc.toFixed(1)}/5</span></div><div class="pb"><div class="pf" style="width:${(sc/5)*100}%"></div></div></div>`).join('');
+  const str=an.strengths.map(s=>`<div style="background:rgba(16,185,129,.07);border-left:3px solid var(--g);padding:.5rem .75rem;border-radius:6px;margin-bottom:.3rem;font-size:.82rem"><strong style="color:#10b981">${s.area}:</strong> ${s.desc}</div>`).join('');
+  const imp=an.improvs.map(i=>`<div style="background:rgba(245,158,11,.07);border-left:3px solid var(--w);padding:.5rem .75rem;border-radius:6px;margin-bottom:.3rem;font-size:.82rem"><strong style="color:#f59e0b">${i.area}:</strong> ${i.desc}</div>`).join('');
+  openModal(`<div class="mhdr"><span class="mtitle">🤖 AI Analysis — ${cand.name}</span><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.1rem">
+      <div style="text-align:center;background:rgba(30,41,59,.5);border-radius:9px;padding:.8rem"><div style="font-size:1.9rem;font-weight:800;color:var(--p)">${an.avg.toFixed(1)}</div><div style="color:var(--mu);font-size:.72rem">Score /5</div></div>
+      <div style="text-align:center;background:rgba(30,41,59,.5);border-radius:9px;padding:.8rem"><div style="font-size:1.9rem;font-weight:800;color:var(--ai)">${an.conf}%</div><div style="color:var(--mu);font-size:.72rem">Confidence</div></div>
+      <div style="text-align:center;background:rgba(30,41,59,.5);border-radius:9px;padding:.8rem"><div style="font-size:1.9rem;font-weight:800;color:var(--g)">${an.cons.toFixed(0)}%</div><div style="color:var(--mu);font-size:.72rem">Consistency</div></div>
+    </div>
+    <div class="aibox"><div class="aittl">🎯 ${an.rec}</div><p style="color:#e2e8f0;line-height:1.75;font-size:.87rem">${an.summary}</p></div>
+    <div style="margin:1rem 0">${skillBars}</div>
+    ${str?`<div style="margin-bottom:.8rem"><div style="font-weight:700;color:var(--g);margin-bottom:.5rem;font-size:.85rem">✅ Strengths</div>${str}</div>`:''}
+    ${imp?`<div><div style="font-weight:700;color:var(--w);margin-bottom:.5rem;font-size:.85rem">⚠️ Development Areas</div>${imp}</div>`:''}
+    <div style="text-align:center;color:var(--mu);font-size:.73rem;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--bd)">Based on ${an.count} evaluation(s)</div>`);
+}
+
+/* ─── EXPORTS ─── */
+function dlTmpl(type,fmt){
+  const t={cands:[['phone','name','position','email'],['0712345678','John Doe','Software Engineer','john@example.com']],panels:[['name','email','position','password'],['Sarah Johnson','sarah@co.com','Senior Engineer','pass123']],questions:[['section','question'],['Technical Skills','Describe experience with relevant technologies']]};
+  const rows=t[type];
+  if(fmt==='csv'){const b=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=type+'_template.csv';a.click();}
+  else{const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,type);XLSX.writeFile(wb,type+'_template.xlsx');}
+}
+function expCSV(){
+  const d=db();const r=calcRankings();if(!r.length){alert('❌ No data to export.');return;}
+  let csv='Rank,Name,Position,Phone,Email,Avg Score,Percentage,Evaluations,Recommendation\n';
+  r.forEach((x,i)=>{const c=d.candidates.find(c=>c.id===x.candId);if(c)csv+=[i+1,'"'+x.name+'"','"'+x.position+'"',c.phone,c.email,x.avg.toFixed(2),x.pct.toFixed(1)+'%',x.count,'"'+x.rec+'"'].join(',')+'\n';});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='evaluation_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+function expXLS(){
+  const d=db();const r=calcRankings();if(!r.length){alert('❌ No data.');return;}
+  const wb=XLSX.utils.book_new();
+  const avg=r.length?(r.reduce((s,x)=>s+x.avg,0)/r.length).toFixed(2):'N/A';
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Metric','Value'],['Candidates',r.length],['Evaluations',d.evaluations.length],['Panels',d.panels.length],['Avg Score',avg]]),'Summary');
+  const rd=[['Rank','Name','Position','Score','%','Evals','Recommendation']];
+  r.forEach((x,i)=>{rd.push([i+1,x.name,x.position,x.avg.toFixed(2),x.pct.toFixed(1)+'%',x.count,x.rec]);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rd),'Rankings');
+  const ed=[['Candidate','Panelist','Score','Date','Comment']];
+  d.evaluations.forEach(e=>ed.push([e.candidateName,e.panelistName,e.avgScore.toFixed(2),e.date,e.comment||'']));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ed),'Evaluations');
+  const pd=[['Panel','Members','Allocated Candidates']];
+  d.panels.forEach(pn=>{
+    const mems=(pn.memberIds||[]).map(id=>{const p=d.panelists.find(x=>x.id===id);return p?p.name:'?';}).join(', ');
+    const cands=(pn.candidateIds||[]).map(id=>{const c=d.candidates.find(x=>x.id===id);return c?c.name:'?';}).join(', ');
+    pd.push([pn.name,mems,cands]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(pd),'Panels');
+  XLSX.writeFile(wb,'evaluation_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  alert('✅ Excel downloaded — 4 sheets: Summary, Rankings, Evaluations, Panels.');
+}
+</script>
+</body>
+</html>
